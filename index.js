@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const { joinChannelAndPlayFile } = require('./utils');
-const { commandToFileMap, key } = require('./config');
+const { commandToFileMap } = require('./config');
 
 const client = new Discord.Client();
 
