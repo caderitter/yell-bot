@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+require('dotenv').config();
 const { joinChannelAndPlayFile } = require('./utils');
 const { commandToFileMap, key } = require('./config');
 
