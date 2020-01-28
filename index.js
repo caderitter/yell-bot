@@ -1,13 +1,13 @@
 require('dotenv').config();
 const Discord = require('discord.js');
-const { playFile, updateCommands } = require('./utils');
+const { playFile, createCommandMap } = require('./utils');
 
 let commandMap;
 
 const client = new Discord.Client();
 
 client.on('ready', async () => {
-  commandMap = await updateCommands();
+  commandMap = await createCommandMap();
   console.log('i am ready');
 });
 
@@ -18,8 +18,14 @@ client.on('message', async message => {
   } else {
     switch (message.content) {
       case 'updatecommands': 
-        commandMap = await updateCommands();
-        m.reply('commands updated from airtable!');
+        try {
+          commandMap = await createCommandMap();
+          message.reply('commands updated from airtable!');
+        } catch (e) {
+          message.reply('there was an error while updating commands: ' + e);
+        }
+      case 'stop':
+        message.member.voiceChannel.leave();
       default:
         return;
     }

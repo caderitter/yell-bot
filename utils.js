@@ -1,6 +1,6 @@
 const base = require('airtable').base('appcLczgHk2kiv2Pc');
 
-const playFile = function (message, file) {  
+const playFile = (message, file) => {  
   if (message.member.voiceChannel) {
     message.member.voiceChannel.join()
       .then(connection => {
@@ -15,7 +15,7 @@ const playFile = function (message, file) {
   }
 }
 
-const updateCommands = async () => {
+const createCommandMap = async () => {
   const records = await base('yell-bot').select().all();
   const map = records.reduce((acc, record) => {
     const command = record.get('Command');
@@ -27,5 +27,5 @@ const updateCommands = async () => {
 
 module.exports = {
   playFile,
-  updateCommands
+  createCommandMap
 };
