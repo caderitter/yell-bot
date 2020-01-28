@@ -16,13 +16,12 @@ const playFile = function (message, file) {
 }
 
 const updateCommands = async () => {
-  let map;
   const records = await base('yell-bot').select().all();
-  records.forEach(record => {
+  const map = records.reduce((acc, record) => {
     const command = record.get('Command');
     const fileUrl = record.get('Audio file to play')[0].url;
-    map = { [command]: fileUrl, ...map };
-  });
+    return { ...acc, [command]: fileUrl };
+  }, {});
   return map;
 };
 

@@ -4,11 +4,11 @@ const { playFile, handleMessage, updateCommands } = require('./utils');
 
 let commandMap; 
 
+updateCommands();
+
 const client = new Discord.Client();
 
 client.on('ready', async () => {
-  console.log('updating commands from airtable...');
-  commandMap = await updateCommands();
   console.log('i am ready');
 });
 
