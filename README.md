@@ -4,12 +4,13 @@ Stupid bot made for our discord server
 
 ## Quickstart
 
-Put your key in a .env file in the same directory:
+Put your keys in a .env file in the same directory:
 
 ```.env
-KEY=your key
+DISCORD_API_KEY=discord key
+AIRTABLE_API_KEY=airtable key
 ```
-Install deps and start
+Install deps and start:
 
 ```sh
 npm i
