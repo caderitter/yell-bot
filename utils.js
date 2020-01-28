@@ -26,7 +26,8 @@ const updateCommands = async () => {
 };
 
 const handleMessage = switchObj => message => {
-  if (switchObj[message.content]) return switchObj[message.content](message);
+  if (!switchObj[message.content]) return;
+  return switchObj[message.content](message);
 }
 
 module.exports = {
