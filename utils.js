@@ -25,13 +25,7 @@ const updateCommands = async () => {
   return map;
 };
 
-const handleMessage = switchObj => message => {
-  if (!switchObj[message.content]) return;
-  return switchObj[message.content](message);
-}
-
 module.exports = {
   playFile,
-  updateCommands,
-  handleMessage
+  updateCommands
 };
