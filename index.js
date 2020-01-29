@@ -30,7 +30,7 @@ client.on('message', async message => {
         return;
       case 'listcommands':
         const commands = await listCommands();
-        message.reply(commands);
+        message.reply([...commands, 'updatecommands, postcommand, stop']);
         return;
       case 'postcommand': 
         message.reply('Visit https://airtable.com/shrq3sefXjlth5MJ2');
