@@ -1,6 +1,6 @@
 require('dotenv').config();
 const Discord = require('discord.js');
-const { playFile, createCommandMap } = require('./utils');
+const { playFile, createCommandMap, listCommands } = require('./utils');
 
 let commandMap;
 
@@ -24,8 +24,14 @@ client.on('message', async message => {
         } catch (e) {
           message.reply('there was an error while updating commands: ' + e);
         }
+        return;
       case 'stop':
-        message.member.voiceChannel.leave();
+        if (message.member.voiceChannel) message.member.voiceChannel.leave();
+        return;
+      case 'listcommands':
+        const commands = await listCommands();
+        message.reply(commands);
+        return;
       default:
         return;
     }

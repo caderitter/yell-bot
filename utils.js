@@ -25,7 +25,13 @@ const createCommandMap = async () => {
   return map;
 };
 
+const listCommands = async () => {
+  const records = await base('yell-bot').select().all();
+  return records.reduce((acc, record) => [...acc, record.get('Command')], []);
+}
+
 module.exports = {
   playFile,
-  createCommandMap
+  createCommandMap,
+  listCommands
 };
