@@ -31,3 +31,13 @@ const airtableConfig = {
 npm i
 npm start
 ```
+
+4. Available commands are:
+
+`listcommands` - lists commands
+
+`updatecommands` - updates commands from airtable. run after you add a command through the form to fetch new commands
+
+`postcommand` - replies with a link to your airtable form
+
+and of course your added commands.
