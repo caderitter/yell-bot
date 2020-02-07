@@ -1,43 +1,44 @@
-require('dotenv').config();
-const Discord = require('discord.js');
-const { playFile, createCommandMap, listCommands } = require('./utils');
-const { airtableConfig } = require('./config');
+require("dotenv").config();
+const Discord = require("discord.js");
+const { playFile, createCommandMap, listCommands } = require("./utils");
+const { airtableConfig } = require("./config");
+const { handlePost } = require('./handlers');
 
 let commandMap;
 const client = new Discord.Client();
 
-client.on('ready', async () => {
+client.on("ready", async () => {
   commandMap = await createCommandMap();
-  console.log('i am ready');
+  console.log("i am ready");
 });
 
-client.on('message', async message => {
+client.on("message", async message => {
   if (!message.guild) return;
   if (commandMap[message.content]) {
     playFile(message, commandMap[message.content]);
   } else {
     switch (message.content) {
-      case 'updatecommands':
+      case "updatecommands":
         try {
           commandMap = await createCommandMap();
-          message.reply('commands updated from airtable!');
+          message.reply("commands updated from airtable!");
         } catch (e) {
-          message.reply('there was an error while updating commands: ' + e);
+          message.reply("there was an error while updating commands: " + e);
         }
         return;
-      case 'stop':
+      case "stop":
         if (message.member.voiceChannel) message.member.voiceChannel.leave();
         return;
-      case 'listcommands':
+      case "listcommands":
         try {
           const commands = await listCommands();
-          message.reply([...commands, 'updatecommands', 'postcommand', 'stop']);
+          message.reply([...commands, "updatecommands", "postcommand", "stop"]);
         } catch (e) {
-          message.reply('there was an error while fetching commands: ' + e);
+          message.reply("there was an error while fetching commands: " + e);
         }
         return;
-      case 'postcommand':
-        message.reply(`Visit ${airtableConfig.FORM_URL}`);
+      case "postcommand":
+        handlePost(message);
         return;
       default:
         return;
