@@ -65,7 +65,7 @@ client.on('message', async message => {
       case 'postyell':
         if (!secondArg) {
           message.reply(
-            'you need to provide a sticker name: poststicker [sticker name]'
+            'you need to provide a yell name: postyell [sticker name]'
           );
           return;
         }
