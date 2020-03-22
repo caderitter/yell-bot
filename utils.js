@@ -1,5 +1,4 @@
 const { airtableConfig } = require('./config');
-const { MessageAttachment } = require('discord.js');
 const base = require('airtable').base(airtableConfig.BASE_ID);
 
 const playFile = async (message, file) => {
@@ -16,8 +15,9 @@ const playFile = async (message, file) => {
 };
 
 const sendImage = async (message, file) => {
-  const attachment = new MessageAttachment(file);
-  await message.channel.send(attachment);
+  return await message.channel.send('', {
+    file
+  });
 };
 
 const createYellMap = async () => {
@@ -37,19 +37,24 @@ const createStickerMap = async () => {
     .all();
   return records.reduce((acc, record) => {
     const command = record.get(airtableConfig.STICKER_MESSAGE_COLUMN_ID);
-    const fileUrl = record.get(airtableConfig.STICKER_IMAGE_COLUMN_ID)[0].url;
+    const fileUrl = record.get(airtableConfig.STICKER_IMAGE_COLUMN_ID)
+      ? record.get(airtableConfig.STICKER_IMAGE_COLUMN_ID)[0].url
+      : null;
     return { ...acc, [command]: fileUrl };
   }, {});
 };
 
 const listCommands = async () => {
-  const records = await base(airtableConfig.TABLE_ID)
+  const yellRecords = await base(airtableConfig.TABLE_ID)
     .select()
     .all();
-  const yellCommands = records.map(record =>
+  const stickerRecords = await base(airtableConfig.STICKER_TABLE_ID)
+    .select()
+    .all();
+  const yellCommands = yellRecords.map(record =>
     record.get(airtableConfig.MESSAGE_COLUMN_ID)
   );
-  const stickerCommands = records.map(record =>
+  const stickerCommands = stickerRecords.map(record =>
     record.get(airtableConfig.STICKER_MESSAGE_COLUMN_ID)
   );
   return [yellCommands, stickerCommands];
@@ -99,8 +104,6 @@ const getAttachmentFromMessage = message => {
   }
   return attachment;
 };
-
-const postSticker = async () => {};
 
 module.exports = {
   playFile,

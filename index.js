@@ -34,12 +34,10 @@ client.on('message', async message => {
       return;
     }
   } else if (firstArg === 'sticker' && stickerMap[secondArg]) {
-    try {
-      await sendImage(message, stickerMap[secondArg]);
-    } catch (e) {
-      console.log('Sticker failed failed to send: ' + e);
-    }
+    await sendImage(message, stickerMap[secondArg]);
+    return;
   } else {
+    let attachment;
     switch (firstArg) {
       case 'stopyell':
         if (message.member.voiceChannel) message.member.voiceChannel.leave();
@@ -48,6 +46,7 @@ client.on('message', async message => {
         try {
           const [yellCommands, stickerCommands] = await listCommands();
           message.channel.send([
+            '',
             'YELLS:',
             ...yellCommands,
             '',
@@ -64,18 +63,28 @@ client.on('message', async message => {
         }
         return;
       case 'postyell':
-        const attachment = getAttachmentFromMessage(message);
+        attachment = getAttachmentFromMessage(message);
+        if (!attachment) return;
         try {
           await postYell(secondArg, attachment.url);
+          yellMap = await createYellMap();
           message.reply(`yell ${secondArg} created.`);
         } catch (e) {
           message.reply('there was an error: ' + e);
         }
         return;
       case 'poststicker':
-        const attachment = getAttachmentFromMessage(message);
+        if (!secondArg) {
+          message.reply(
+            'you need to provide a sticker name: poststicker [sticker name]'
+          );
+          return;
+        }
+        attachment = getAttachmentFromMessage(message);
+        if (!attachment) return;
         try {
           await postSticker(secondArg, attachment.url);
+          stickerMap = await createStickerMap();
           message.reply(`sticker ${secondArg} created.`);
         } catch (e) {
           message.reply('there was an error: ' + e);
