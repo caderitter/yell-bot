@@ -63,6 +63,12 @@ client.on('message', async message => {
         }
         return;
       case 'postyell':
+        if (!secondArg) {
+          message.reply(
+            'you need to provide a sticker name: poststicker [sticker name]'
+          );
+          return;
+        }
         attachment = getAttachmentFromMessage(message);
         if (!attachment) return;
         try {
