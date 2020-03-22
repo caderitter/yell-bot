@@ -1,4 +1,5 @@
 const { airtableConfig } = require('./config');
+const { MessageAttachment } = require('discord.js');
 const base = require('airtable').base(airtableConfig.BASE_ID);
 
 const playFile = async (message, file) => {
@@ -14,7 +15,12 @@ const playFile = async (message, file) => {
   }
 };
 
-const createCommandMap = async () => {
+const sendImage = async (message, file) => {
+  const attachment = new MessageAttachment(file);
+  await message.channel.send(attachment);
+};
+
+const createYellMap = async () => {
   const records = await base(airtableConfig.TABLE_ID)
     .select()
     .all();
@@ -25,15 +31,84 @@ const createCommandMap = async () => {
   }, {});
 };
 
+const createStickerMap = async () => {
+  const records = await base(airtableConfig.STICKER_TABLE_ID)
+    .select()
+    .all();
+  return records.reduce((acc, record) => {
+    const command = record.get(airtableConfig.STICKER_MESSAGE_COLUMN_ID);
+    const fileUrl = record.get(airtableConfig.STICKER_IMAGE_COLUMN_ID)[0].url;
+    return { ...acc, [command]: fileUrl };
+  }, {});
+};
+
 const listCommands = async () => {
   const records = await base(airtableConfig.TABLE_ID)
     .select()
     .all();
-  return records.map(record => record.get(airtableConfig.MESSAGE_COLUMN_ID));
+  const yellCommands = records.map(record =>
+    record.get(airtableConfig.MESSAGE_COLUMN_ID)
+  );
+  const stickerCommands = records.map(record =>
+    record.get(airtableConfig.STICKER_MESSAGE_COLUMN_ID)
+  );
+  return [yellCommands, stickerCommands];
 };
+
+const postYell = async (command, file) => {
+  return base(airtableConfig.TABLE_ID).create([
+    {
+      fields: {
+        [airtableConfig.MESSAGE_COLUMN_ID]: command,
+        [airtableConfig.FILE_COLUMN_ID]: [
+          {
+            url: file
+          }
+        ]
+      }
+    }
+  ]);
+};
+
+const postSticker = async (command, file) => {
+  return base(airtableConfig.STICKER_TABLE_ID).create([
+    {
+      fields: {
+        [airtableConfig.STICKER_MESSAGE_COLUMN_ID]: command,
+        [airtableConfig.STICKER_IMAGE_COLUMN_ID]: [
+          {
+            url: file
+          }
+        ]
+      }
+    }
+  ]);
+};
+
+const getAttachmentFromMessage = message => {
+  const [attachment] = message.attachments.array();
+  if (!attachment) {
+    message.reply('you need to add the file as an attachment.');
+    return;
+  }
+  if (attachment.filesize > 2000000) {
+    message.reply(
+      'that attachment is over the 2MB limit. Please submit a smaller file.'
+    );
+    return;
+  }
+  return attachment;
+};
+
+const postSticker = async () => {};
 
 module.exports = {
   playFile,
-  createCommandMap,
-  listCommands
+  sendImage,
+  createYellMap,
+  createStickerMap,
+  listCommands,
+  postYell,
+  postSticker,
+  getAttachmentFromMessage
 };
