@@ -1,20 +1,21 @@
 const {
   playFile,
   sendImage,
-  createYellMap,
-  createStickerMap,
-  listCommands,
+  listYells,
+  listStickers,
   postYell,
   postSticker,
   getAttachmentFromMessage,
 } = require('./utils');
+const { updateYellMap, updateStickerMap } = require('./globals');
 
 const handlePlayFile = async message => {
-  yellMap = await createYellMap();
-  if (!yellMap[message.content]) return;
-  const file = yellMap[message.content];
+  if (isPlaying) return;
+  const [, secondArg] = message.content.split(' ');
+  const file = yellMap[secondArg];
+  if (!file) return;
   try {
-    if (message.member.voiceChannel) {
+    if (message.member.voice.channel) {
       await playFile(message, file);
     } else {
       message.reply('get in a voice channel ya dummy');
@@ -25,7 +26,7 @@ const handlePlayFile = async message => {
 };
 
 const handleSendSticker = async message => {
-  const stickerMap = createStickerMap();
+  const [, secondArg] = message.content.split(' ');
   const file = stickerMap[secondArg];
   if (!file) return;
   try {
@@ -35,29 +36,45 @@ const handleSendSticker = async message => {
   }
 };
 
-const handleListCommands = async message => {
-  try {
-    const [yellCommands, stickerCommands] = await listCommands();
-    message.channel.send([
-      '',
-      'Yells:',
-      ...yellCommands,
-      '',
-      'Stickers:',
-      ...stickerCommands.map(c => `sticker ${c}`),
-      '',
-      'Utils:',
-      '!postyell [name] -- this requires an attachment',
-      '!poststicker [name] -- this requires an attachment',
-      '!stopyell',
-    ]);
-  } catch (e) {
-    message.reply('there was an error while fetching commands: ' + e);
+const handleStopYell = message => {
+  isPlaying = false;
+  message.member.voice.channel && message.member.voice.channel.leave();
+};
+
+const createCommandEmbed = (title, commands) => {
+  return {
+    embed: {
+      title,
+      description: commands.reduce((acc, cur) => acc + `- ${cur} \n`, ''),
+    },
+  };
+};
+
+const handleHelp = async message => {
+  const [, secondArg] = message.content.split(' ');
+  if (secondArg === 'yell') {
+    const yellCommands = await listYells();
+    message.channel.send(createCommandEmbed('Available yells', yellCommands));
+  } else if (secondArg === 'sticker') {
+    const stickerCommands = await listStickers();
+    message.channel.send(
+      createCommandEmbed('Available stickers', stickerCommands)
+    );
+  } else if (!secondArg) {
+    message.channel.send({
+      embed: {
+        title: "Frank's commands",
+        description:
+          '**Yell**\n\n`!yell <yellname>` - Frank joins your voice channel and yells\n\n`!stopyell` - forces Frank to stop yelling\n\n`!postyell <yellname>` - posts a new yell *(requires that the audio file is attached to the message)*\n\n\n**Sticker**\n\n`!sticker <stickername>` - Frank posts the sticker to the text channel\n\n`!poststicker <stickername>`-  posts a new sticker *(requires that the sticker image is attached to the message)*\n\n\n**Help**\n\n`!help` - displays this page\n\n`!help yell` - displays a list of possible yells\n\n`!help sticker` - displays a list of possible stickers\n\n\n\n\n',
+      },
+    });
   }
 };
 
-const handlePostYell = async (message, yellName) => {
-  if (!yellName) {
+const handlePostYell = async message => {
+  const [, secondArg] = message.content.split(' ');
+
+  if (!secondArg) {
     message.reply('you need to provide a yell name: !postyell [yell name]');
     return;
   }
@@ -71,15 +88,18 @@ const handlePostYell = async (message, yellName) => {
   }
 
   try {
-    await postYell(yellName, attachment.url);
-    message.reply(`yell ${yellName} created.`);
+    await postYell(secondArg, attachment.url);
+    await updateYellMap();
+    message.reply(`yell ${secondArg} created.`);
   } catch (e) {
     message.reply('there was an error: ' + e);
   }
 };
 
-const handlePostSticker = async (message, stickerName) => {
-  if (!stickerName) {
+const handlePostSticker = async message => {
+  const [, secondArg] = message.content.split(' ');
+
+  if (!secondArg) {
     message.reply(
       'you need to provide a sticker name: !poststicker [sticker name]'
     );
@@ -93,26 +113,21 @@ const handlePostSticker = async (message, stickerName) => {
     message.reply(e.message);
     return;
   }
-  
+
   try {
-    await postSticker(stickerName, attachment.url);
-    message.reply(`sticker ${stickerName} created.`);
+    await postSticker(secondArg, attachment.url);
+    await updateStickerMap();
+    message.reply(`sticker ${secondArg} created.`);
   } catch (e) {
     message.reply('there was an error: ' + e);
   }
 };
 
-const handleBind = (message, handleChannelUpdate) => {
-  const channel = message.channel;
-  message.channel.send('frank is now soul bound to this channel');
-  handleChannelUpdate(channel);
-};
-
 module.exports = {
   handlePlayFile,
   handleSendSticker,
-  handleListCommands,
+  handleStopYell,
+  handleHelp,
   handlePostYell,
   handlePostSticker,
-  handleBind,
 };

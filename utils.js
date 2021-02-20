@@ -1,18 +1,31 @@
-const airtableConfig  = require('./config.json');
-const base = require('airtable').base(airtableConfig.BASE_ID);
+const airtable = require('airtable');
+const airtableConfig = require('./config.json');
+
+const base = airtable.base(airtableConfig.BASE_ID);
+
+const messageSwitch = (message, switchObj) => {
+  const { content } = message;
+  const firstWord = content.split(' ')[0].slice(1);
+  if (!switchObj[firstWord]) return;
+  if (typeof switchObj[firstWord] !== 'function')
+    throw new Error('config object requires functions as values');
+  return switchObj[firstWord](message);
+};
 
 const playFile = async (message, file) => {
-  const connection = await message.member.voiceChannel.join();
-  const dispatcher = connection.playArbitraryInput(file);
+  const connection = await message.member.voice.channel.join();
+  const dispatcher = connection.play(file);
+  isPlaying = true;
   dispatcher.setVolume(1);
-  dispatcher.on('end', () => {
-    message.member.voiceChannel.leave();
+  dispatcher.on('finish', () => {
+    isPlaying = false;
+    message.member.voice.channel.leave();
   });
 };
 
 const sendImage = async (message, file) => {
   return await message.channel.send('', {
-    file,
+    files: [file],
   });
 };
 
@@ -36,18 +49,22 @@ const createStickerMap = async () => {
   }, {});
 };
 
-const listCommands = async () => {
+const listYells = async () => {
   const yellRecords = await base(airtableConfig.YELL_TABLE_ID).select().all();
-  const stickerRecords = await base(airtableConfig.STICKER_TABLE_ID)
-    .select()
-    .all();
   const yellCommands = yellRecords.map(record =>
     record.get(airtableConfig.YELL_MESSAGE_COLUMN_ID)
   );
+  return yellCommands;
+};
+
+const listStickers = async () => {
+  const stickerRecords = await base(airtableConfig.STICKER_TABLE_ID)
+    .select()
+    .all();
   const stickerCommands = stickerRecords.map(record =>
     record.get(airtableConfig.STICKER_MESSAGE_COLUMN_ID)
   );
-  return [yellCommands, stickerCommands];
+  return stickerCommands;
 };
 
 const postYell = async (command, file) => {
@@ -80,23 +97,27 @@ const postSticker = async (command, file) => {
   ]);
 };
 
-const getAttachmentFromMessage = async message => {
+const getAttachmentFromMessage = message => {
   const [attachment] = message.attachments.array();
   if (!attachment) {
     throw new Error('you need to add the file as an attachment.');
   }
   if (attachment.filesize > 2000000) {
-    throw new Error('that attachment is over the 2MB limit. Please submit a smaller file.');
+    throw new Error(
+      'that attachment is over the 2MB limit. Please submit a smaller file.'
+    );
   }
   return attachment;
 };
 
 module.exports = {
+  messageSwitch,
   playFile,
   sendImage,
   createYellMap,
   createStickerMap,
-  listCommands,
+  listYells,
+  listStickers,
   postYell,
   postSticker,
   getAttachmentFromMessage,
