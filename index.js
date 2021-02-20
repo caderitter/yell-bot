@@ -1,105 +1,42 @@
 require('dotenv').config();
 const Discord = require('discord.js');
+const { messageSwitch } = require('./utils');
 const {
-  playFile,
-  sendImage,
-  createYellMap,
-  createStickerMap,
-  listCommands,
-  postYell,
-  postSticker,
-  getAttachmentFromMessage
-} = require('./utils');
+  handlePlayFile,
+  handleSendSticker,
+  handleStopYell,
+  handleHelp,
+  handlePostYell,
+  handlePostSticker,
+} = require('./handlers');
+const { updateYellMap, updateStickerMap } = require('./globals');
 
-let yellMap;
-let stickerMap;
+(function () {
+  const client = new Discord.Client();
 
-const client = new Discord.Client();
-
-client.on('ready', async () => {
-  yellMap = await createYellMap();
-  stickerMap = await createStickerMap();
-  console.log('i am ready');
-});
-
-client.on('message', async message => {
-  if (!message.guild) return;
-  const [firstArg, secondArg] = message.content.split(' ');
-
-  if (yellMap[message.content]) {
+  client.on('ready', async () => {
     try {
-      await playFile(message, yellMap[message.content]);
+      await updateYellMap();
+      await updateStickerMap();
+      console.log('i am ready');
     } catch (e) {
-      console.log('Yell failed to play: ' + e);
-      return;
+      console.error('there was an error creating maps: ' + e);
     }
-  } else if (firstArg === 'sticker' && stickerMap[secondArg]) {
-    await sendImage(message, stickerMap[secondArg]);
-    return;
-  } else {
-    let attachment;
-    switch (firstArg) {
-      case 'stopyell':
-        if (message.member.voiceChannel) message.member.voiceChannel.leave();
-        return;
-      case 'listcommands':
-        try {
-          const [yellCommands, stickerCommands] = await listCommands();
-          message.channel.send([
-            '',
-            'YELLS:',
-            ...yellCommands,
-            '',
-            'STICKERS:',
-            ...stickerCommands.map(c => `sticker ${c}`),
-            '',
-            'UTILS:',
-            'postyell [name] -- this requires an attachment',
-            'poststicker [name] -- this requires an attachment',
-            'stopyell'
-          ]);
-        } catch (e) {
-          message.reply('there was an error while fetching commands: ' + e);
-        }
-        return;
-      case 'postyell':
-        if (!secondArg) {
-          message.reply(
-            'you need to provide a yell name: postyell [sticker name]'
-          );
-          return;
-        }
-        attachment = getAttachmentFromMessage(message);
-        if (!attachment) return;
-        try {
-          await postYell(secondArg, attachment.url);
-          yellMap = await createYellMap();
-          message.reply(`yell ${secondArg} created.`);
-        } catch (e) {
-          message.reply('there was an error: ' + e);
-        }
-        return;
-      case 'poststicker':
-        if (!secondArg) {
-          message.reply(
-            'you need to provide a sticker name: poststicker [sticker name]'
-          );
-          return;
-        }
-        attachment = getAttachmentFromMessage(message);
-        if (!attachment) return;
-        try {
-          await postSticker(secondArg, attachment.url);
-          stickerMap = await createStickerMap();
-          message.reply(`sticker ${secondArg} created.`);
-        } catch (e) {
-          message.reply('there was an error: ' + e);
-        }
-        return;
-      default:
-        return;
-    }
-  }
-});
+  });
 
-client.login(process.env.DISCORD_API_KEY);
+  client.on('message', async message => {
+    if (!message.guild) return;
+    if (!message.content.startsWith('!')) return;
+
+    messageSwitch(message, {
+      yell: m => handlePlayFile(m),
+      sticker: m => handleSendSticker(m),
+      stopyell: m => handleStopYell(m),
+      help: m => handleHelp(m),
+      postyell: m => handlePostYell(m),
+      poststicker: m => handlePostSticker(m),
+    });
+  });
+
+  client.login(process.env.DISCORD_API_KEY);
+})();
