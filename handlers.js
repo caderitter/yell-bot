@@ -31,6 +31,7 @@ const handleSendSticker = async message => {
   if (!file) return;
   try {
     await sendImage(message, file);
+    await message.delete();
   } catch (e) {
     message.reply('sticker failed to send: ' + e);
   }
