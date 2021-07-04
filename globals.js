@@ -4,6 +4,7 @@ const base = require('airtable').base(airtableConfig.BASE_ID);
 global.isPlaying = false;
 global.yellMap = {};
 global.stickerMap = {};
+global.greetingMap = {};
 
 const updateYellMap = async () => {
   const records = await base(airtableConfig.YELL_TABLE_ID).select().all();
@@ -25,7 +26,17 @@ const updateStickerMap = async () => {
   }, {});
 };
 
+const updateGreetingMap = async () => {
+  const records = await base(airtableConfig.GREETING_TABLE_ID).select().all();
+  greetingMap = records.reduce((acc, record) => {
+    const userId = record.get(airtableConfig.GREETING_USER_COLUMN_ID);
+    const fileUrl = record.get(airtableConfig.GREETING_FILE_COLUMN_ID)[0].url;
+    return { ...acc, [userId]: fileUrl };
+  }, {});
+};
+
 module.exports = {
   updateYellMap,
   updateStickerMap,
+  updateGreetingMap,
 };

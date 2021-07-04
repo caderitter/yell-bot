@@ -5,5 +5,8 @@
   "YELL_FILE_COLUMN_ID": "Audio file to play",
   "STICKER_TABLE_ID": "yell-bot-stickers",
   "STICKER_MESSAGE_COLUMN_ID": "Sticker name",
-  "STICKER_IMAGE_COLUMN_ID": "Sticker image"
+  "STICKER_IMAGE_COLUMN_ID": "Sticker image",
+  "GREETING_TABLE_ID": "yell-bot-greetings",
+  "GREETING_USER_COLUMN_ID": "User ID",
+  "GREETING_FILE_COLUMN_ID": "Audio file to play"
 }

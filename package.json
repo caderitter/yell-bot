@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js | pino-pretty"
   },
   "author": "Cade Ritter",
   "license": "ISC",
@@ -13,6 +14,11 @@
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
     "ffmpeg-static": "^2.7.0",
-    "opusscript": "0.0.7"
+    "opusscript": "0.0.7",
+    "pino": "^6.11.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7",
+    "pino-pretty": "^4.5.0"
   }
 }

@@ -6,8 +6,13 @@ const {
   postYell,
   postSticker,
   getAttachmentFromMessage,
+  postGreeting,
 } = require('./utils');
-const { updateYellMap, updateStickerMap } = require('./globals');
+const {
+  updateYellMap,
+  updateStickerMap,
+  updateGreetingMap,
+} = require('./globals');
 
 const handlePlayFile = async message => {
   if (isPlaying) return;
@@ -123,6 +128,30 @@ const handlePostSticker = async message => {
   }
 };
 
+const handlePostGreeting = async message => {
+  const userId = message.mentions.users.first()?.id;
+  if (!userId) {
+    message.reply('you need to tag a person: `!postgreeting @Cade#2793`');
+    return;
+  }
+
+  let attachment;
+  try {
+    attachment = getAttachmentFromMessage(message);
+  } catch (e) {
+    message.reply(e.message);
+    return;
+  }
+
+  try {
+    await postGreeting(userId, attachment.url);
+    await updateGreetingMap();
+    message.reply(`greeting created.`);
+  } catch (e) {
+    message.reply('there was an error: ' + e);
+  }
+};
+
 module.exports = {
   handlePlayFile,
   handleSendSticker,
@@ -130,4 +159,5 @@ module.exports = {
   handleHelp,
   handlePostYell,
   handlePostSticker,
+  handlePostGreeting,
 };
